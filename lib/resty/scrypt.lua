@@ -2,17 +2,28 @@ local random = require "resty.random"
 local ffi = require "ffi"
 local ffi_new = ffi.new
 local ffi_str = ffi.string
-local ffi_load = ffi.load
-local C = ffi.C
 
 ffi.cdef[[
 int crypto_scrypt(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt, size_t saltlen, uint64_t N, uint32_t _r, uint32_t _p, uint8_t * buf, size_t buflen);
 int calibrate(size_t maxmem, double maxmemfrac, double maxtime, uint64_t *n, uint32_t *r, uint32_t *p );
 ]]
 
-local sc = ffi_load("./scryptc.so")
+local sc = ffi.load("./scryptc.so")
 
-function calibrate(options)
+local function hex(str)
+    return (str:gsub('.', function(c)
+        return string.format("%02x", string.byte(c))
+    end))
+end
+
+local function salt(options)
+    if (type(options.salt_size) ~= "number") then
+        options.salt_size = 8
+    end
+    return hex(random.bytes(options.salt_size))
+end
+
+local function calibrate(options)
     if (type(options.maxmem) ~= "number") then
         options.maxmem  = 1024 * 1024
     end
@@ -31,14 +42,7 @@ function calibrate(options)
     return false
 end
 
-function salt(options)
-    if (type(options.salt_size) ~= "number") then
-        options.salt_size = 8
-    end
-    return tohex(random.bytes(options.salt_size))
-end
-
-function hash(options)
+local function hash(options)
     if (type(options.key_len) ~= "number") then
         options.key_len  = 32
     end
@@ -58,14 +62,13 @@ function hash(options)
     local b = ffi_new("uint8_t[?]",  options.key_len)
 
     if (sc.crypto_scrypt(options.secret, #options.secret, options.salt, #options.salt, n[0], r[0], p[0], b, options.key_len) == 0) then
-        return string.format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) .. options.salt .. "$" .. tohex(ffi_str(b, options.key_len))
+        return string.format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) .. options.salt .. "$" .. hex(ffi_str(b, options.key_len))
     end
 
     return false
 end
 
-function tohex(str)
-    return (str:gsub('.', function (c)
-        return string.format("%02x", string.byte(c))
-    end))
-end
+return {
+    calibrate = calibrate,
+    hash      = hash
+}
