@@ -11,15 +11,15 @@ MAKESO= $(CC) -shared
 OBJS = crypto_scrypt-sse.o memlimit.o scrypt_calibrate.o scryptenc_cpuperf.o sha256.o
 
 all: $(OBJS)
-	$(MAKESO) -o scryptc.so $(OBJS)
+	$(MAKESO) -o scrypt.so $(OBJS)
 
 install:
-	cp scryptc.so $(CLIB)
-	cp lscrypt.lua $(LUALIB)
+	cp scrypt.so $(CLIB)
+	cp scrypt.lua $(LUALIB)
 
 uninstall:
 	rm $(LUALIB)scrypt.lua
-	rm $(CLIB)scryptc.so
+	rm $(CLIB)scrypt.so
 
 clean:
 	rm *.o *.so
