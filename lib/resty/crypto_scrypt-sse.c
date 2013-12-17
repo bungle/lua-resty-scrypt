@@ -29,9 +29,7 @@
 #include "scrypt_platform.h"
 
 #include <sys/types.h>
-#ifndef __MINGW32__
 #include <sys/mman.h>
-#endif
 
 #include <emmintrin.h>
 #include <errno.h>
@@ -44,18 +42,18 @@
 
 #include "crypto_scrypt.h"
 
-static void blkcpy(void *, void *, size_t);
-static void blkxor(void *, void *, size_t);
+static void blkcpy(void *, const void *, size_t);
+static void blkxor(void *, const void *, size_t);
 static void salsa20_8(__m128i *);
-static void blockmix_salsa8(__m128i *, __m128i *, __m128i *, size_t);
-static uint64_t integerify(void *, size_t);
+static void blockmix_salsa8(const __m128i *, __m128i *, __m128i *, size_t);
+static uint64_t integerify(const void *, size_t);
 static void smix(uint8_t *, size_t, uint64_t, void *, void *);
 
 static void
-blkcpy(void * dest, void * src, size_t len)
+blkcpy(void * dest, const void * src, size_t len)
 {
 	__m128i * D = dest;
-	__m128i * S = src;
+	const __m128i * S = src;
 	size_t L = len / 16;
 	size_t i;
 
@@ -64,10 +62,10 @@ blkcpy(void * dest, void * src, size_t len)
 }
 
 static void
-blkxor(void * dest, void * src, size_t len)
+blkxor(void * dest, const void * src, size_t len)
 {
 	__m128i * D = dest;
-	__m128i * S = src;
+	const __m128i * S = src;
 	size_t L = len / 16;
 	size_t i;
 
@@ -144,7 +142,7 @@ salsa20_8(__m128i B[4])
  * temporary space X must be 64 bytes.
  */
 static void
-blockmix_salsa8(__m128i * Bin, __m128i * Bout, __m128i * X, size_t r)
+blockmix_salsa8(const __m128i * Bin, __m128i * Bout, __m128i * X, size_t r)
 {
 	size_t i;
 
@@ -176,9 +174,9 @@ blockmix_salsa8(__m128i * Bin, __m128i * Bout, __m128i * X, size_t r)
  * Return the result of parsing B_{2r-1} as a little-endian integer.
  */
 static uint64_t
-integerify(void * B, size_t r)
+integerify(const void * B, size_t r)
 {
-	uint32_t * X = (void *)((uintptr_t)(B) + (2 * r - 1) * 64);
+	const uint32_t * X = (const void *)((uintptr_t)(B) + (2 * r - 1) * 64);
 
 	return (((uint64_t)(X[13]) << 32) + X[0]);
 }
@@ -304,7 +302,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 	if ((errno = posix_memalign(&XY0, 64, 256 * r + 64)) != 0)
 		goto err1;
 	XY = (uint32_t *)(XY0);
-#ifndef MAP_ANON
+#if !defined(MAP_ANON) || !defined(HAVE_MMAP)
 	if ((errno = posix_memalign(&V0, 64, 128 * r * N)) != 0)
 		goto err2;
 	V = (uint32_t *)(V0);
@@ -316,13 +314,13 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 	if ((XY0 = malloc(256 * r + 64 + 63)) == NULL)
 		goto err1;
 	XY = (uint32_t *)(((uintptr_t)(XY0) + 63) & ~ (uintptr_t)(63));
-#ifndef MAP_ANON
+#if !defined(MAP_ANON) || !defined(HAVE_MMAP)
 	if ((V0 = malloc(128 * r * N + 63)) == NULL)
 		goto err2;
 	V = (uint32_t *)(((uintptr_t)(V0) + 63) & ~ (uintptr_t)(63));
 #endif
 #endif
-#ifdef MAP_ANON
+#if defined(MAP_ANON) && defined(HAVE_MMAP)
 	if ((V0 = mmap(NULL, 128 * r * N, PROT_READ | PROT_WRITE,
 #ifdef MAP_NOCORE
 	    MAP_ANON | MAP_PRIVATE | MAP_NOCORE,
@@ -335,7 +333,7 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 #endif
 
 	/* 1: (B_0 ... B_{p-1}) <-- PBKDF2(P, S, 1, p * MFLen) */
-	PBKDF2_scrypt_SHA256(passwd, passwdlen, salt, saltlen, 1, B, p * 128 * r);
+	PBKDF2_SHA256(passwd, passwdlen, salt, saltlen, 1, B, p * 128 * r);
 
 	/* 2: for i = 0 to p - 1 do */
 	for (i = 0; i < p; i++) {
@@ -344,10 +342,10 @@ crypto_scrypt(const uint8_t * passwd, size_t passwdlen,
 	}
 
 	/* 5: DK <-- PBKDF2(P, B, 1, dkLen) */
-	PBKDF2_scrypt_SHA256(passwd, passwdlen, B, p * 128 * r, 1, buf, buflen);
+	PBKDF2_SHA256(passwd, passwdlen, B, p * 128 * r, 1, buf, buflen);
 
 	/* Free memory. */
-#ifdef MAP_ANON
+#if defined(MAP_ANON) && defined(HAVE_MMAP)
 	if (munmap(V0, 128 * r * N))
 		goto err2;
 #else
