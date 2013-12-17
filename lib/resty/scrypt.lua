@@ -8,7 +8,7 @@ int crypto_scrypt(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt
 int calibrate(size_t maxmem, double maxmemfrac, double maxtime, uint64_t *n, uint32_t *r, uint32_t *p);
 ]]
 
-local scrypt = ffi.load("./scrypt.so")
+local scrypt = ffi.load("/usr/local/openresty/lualib/scrypt.so")
 
 local function hex(str)
     return (str:gsub('.', function(c)
