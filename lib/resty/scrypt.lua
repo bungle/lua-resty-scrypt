@@ -31,15 +31,9 @@ local function crypt(options)
             options.keysize = 512
         end
     end
-    if type(options.n) ~= "number" then
-        options.n = 32768
-    end
-    if type(options.r) ~= "number" then
-        options.r = 8
-    end
-    if type(options.p) ~= "number" then
-        options.p = 1
-    end
+    if type(options.n) ~= "number" then options.n = 32768 end
+    if type(options.r) ~= "number" then options.r = 8     end
+    if type(options.p) ~= "number" then options.p = 1     end
     if type(options.salt) ~= "string" then
         if type(options.saltsize) ~= "number" then
             options.saltsize = 8
@@ -74,15 +68,9 @@ local function check(secret, hash)
 end
 
 local function calibrate(maxmem, maxmemfrac, maxtime)
-    if type(maxmem) ~= "number" then
-        maxmem = 1048576
-    end
-    if type(maxmemfrac) ~= "number" then
-        maxmemfrac = 0.5
-    end
-    if type(maxtime) ~= "number" then
-        maxtime = 0.2
-    end
+    if type(maxmem)     ~= "number" then maxmem = 1048576 end
+    if type(maxmemfrac) ~= "number" then maxmemfrac = 0.5 end
+    if type(maxtime)    ~= "number" then maxtime    = 0.2 end
     local n = ffi_new("uint64_t[1]", 0)
     local r = ffi_new("uint32_t[1]", 0)
     local p = ffi_new("uint32_t[1]", 0)
