@@ -2,6 +2,11 @@ local random = require "resty.random"
 local ffi = require "ffi"
 local ffi_new = ffi.new
 local ffi_str = ffi.string
+local type = type
+local tonumber = tonumber
+local tostring = tostring
+local str_format = string.format
+local str_byte = string.byte
 
 ffi.cdef[[
 int crypto_scrypt(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt, size_t saltlen, uint64_t N, uint32_t _r, uint32_t _p, uint8_t * buf, size_t buflen);
@@ -12,7 +17,7 @@ local scrypt = ffi.load("/usr/local/openresty/lualib/scrypt.so")
 
 local function hex(str)
     return (str:gsub('.', function(c)
-        return string.format("%02x", string.byte(c))
+        return str_format("%02x", str_byte(c))
     end))
 end
 
@@ -51,7 +56,7 @@ local function crypt(options)
     local p = ffi_new("uint32_t[1]", options.p)
     local b = ffi_new("uint8_t[?]",  options.keysize)
     if (scrypt.crypto_scrypt(options.secret, #options.secret, options.salt, #options.salt, n[0], r[0], p[0], b, options.keysize) == 0) then
-        return string.format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) .. options.salt .. "$" .. hex(ffi_str(b, options.keysize))
+        return str_format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) .. options.salt .. "$" .. hex(ffi_str(b, options.keysize))
     end
     return false
 end
