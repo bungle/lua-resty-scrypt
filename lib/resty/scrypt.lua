@@ -85,8 +85,9 @@ local function crypt(opts)
         secret, #secret, salt, #salt, n[0], r[0], p[0], b, keysize) == 0 then
         return str_format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) ..
                 salt .. "$" .. hex(ffi_str(b, keysize))
+    else
+        return false
     end
-    return false
 end
 
 local function check(secret, hash)
@@ -106,8 +107,9 @@ local function calibrate(maxmem, maxmemfrac, maxtime)
     if type(maxtime)    ~= "number" then maxtime    = 0.2 end
     if (scrypt.calibrate(maxmem, maxmemfrac, maxtime, n, r, p) == 0) then
         return tonumber(n[0]), r[0], p[0]
+    else
+        return false
     end
-    return false
 end
 
 local function memoryuse(n, r, p)
