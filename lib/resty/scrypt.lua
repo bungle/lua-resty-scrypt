@@ -21,7 +21,13 @@ int crypto_scrypt(
     uint32_t _p,
     uint8_t *buf,
     size_t buflen);
-int calibrate(size_t maxmem, double maxmemfrac, double maxtime, uint64_t *n, uint32_t *r, uint32_t *p);
+int calibrate(
+    size_t maxmem,
+    double maxmemfrac,
+    double maxtime,
+    uint64_t *n,
+    uint32_t *r,
+    uint32_t *p);
 ]]
 
 local scrypt = ffi_load("scrypt")
