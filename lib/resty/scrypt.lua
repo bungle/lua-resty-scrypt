@@ -1,4 +1,4 @@
-local random     = require "random"
+local random     = require "resty.random"
 local ffi        = require "ffi"
 local ffi_cdef   = ffi.cdef
 local ffi_new    = ffi.new
