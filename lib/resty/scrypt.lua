@@ -1,16 +1,19 @@
-local random     = require "resty.random"
+local random     = require "random"
 local ffi        = require "ffi"
 local ffi_cdef   = ffi.cdef
 local ffi_new    = ffi.new
 local ffi_str    = ffi.string
 local ffi_load   = ffi.load
+local ffi_typeof = ffi.typeof
+local C          = ffi.C
 local type       = type
 local tonumber   = tonumber
 local tostring   = tostring
 local str_format = string.format
-local str_byte   = string.byte
 
 ffi_cdef[[
+typedef unsigned char u_char;
+u_char * ngx_hex_dump(u_char *dst, const u_char *src, size_t len);
 int crypto_scrypt(
     const uint8_t *passwd,
     size_t passwdlen,
@@ -33,19 +36,16 @@ int calibrate(
 local scrypt = ffi_load("scrypt")
 
 local s = 32
+local z = 64
+local t = ffi_typeof("uint8_t[?]")
 local n = ffi_new("uint64_t[1]", 32768)
 local r = ffi_new("uint32_t[1]", 8)
 local p = ffi_new("uint32_t[1]", 1)
-local b = ffi_new("uint8_t[?]",  s)
-
-local function hex(str)
-    return (str:gsub('.', function(c)
-        return str_format("%02x", str_byte(c))
-    end))
-end
+local b = ffi_new(t, s)
+local h = ffi_new(t, z)
 
 local function crypt(opts)
-    local secret,salt,saltsize,keysize,n,r,p,b,s = '',nil,8,32,n,r,p,b,s
+    local secret,salt,saltsize,keysize = '',nil,8,32
     if type(opts) ~= "table" then
         secret = tostring(opts)
     else
@@ -55,7 +55,8 @@ local function crypt(opts)
             elseif opts.keysize > 512 then keysize = 512
             else                           keysize = opts.keysize end
             if keysize ~= s then
-                b,s = ffi_new("uint8_t[?]", keysize), keysize
+                s,z = keysize, keysize * 2
+                b,h = ffi_new(t, s), ffi_new(t, z)
             end
         end
         if type(opts.n) == "number" then
@@ -80,11 +81,12 @@ local function crypt(opts)
             end
         end
     end
-    if not salt then salt = hex(random.bytes(saltsize)) end
+    if not salt then salt = random.bytes(saltsize, 'hex') end
     if scrypt.crypto_scrypt(
-        secret, #secret, salt, #salt, n[0], r[0], p[0], b, keysize) == 0 then
-        return str_format("%02x$%02x$%02x$", tonumber(n[0]), r[0], p[0]) ..
-                salt .. "$" .. hex(ffi_str(b, keysize))
+        secret, #secret, salt, #salt, n[0], r[0], p[0], b, s) == 0 then
+        C.ngx_hex_dump(h, b, s)
+        return str_format("%02x$%02x$%02x$%s$%s", tonumber(n[0]), r[0], p[0],
+            salt, ffi_str(h, z))
     else
         return false
     end
