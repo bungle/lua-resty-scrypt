@@ -33,7 +33,7 @@ int calibrate(
     uint32_t *p);
 ]]
 
-local scrypt = ffi_load("/Users/bungle/Sources/lua-scrypt/scrypt.so")
+local scrypt = ffi_load("scrypt")
 
 local s = 32
 local z = 64
