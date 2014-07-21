@@ -53,7 +53,6 @@ local function random(len)
     return ffi_str(b, len * 2),strong
 end
 
-
 local function crypt(opts)
     local secret,salt,saltsize,keysize = '',nil,8,32
     if type(opts) ~= "table" then
