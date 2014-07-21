@@ -1,4 +1,3 @@
-local random     = require "resty.random"
 local ffi        = require "ffi"
 local ffi_cdef   = ffi.cdef
 local ffi_new    = ffi.new
@@ -14,6 +13,7 @@ local str_format = string.format
 ffi_cdef[[
 typedef unsigned char u_char;
 u_char * ngx_hex_dump(u_char *dst, const u_char *src, size_t len);
+int RAND_pseudo_bytes(u_char *buf, int num);
 int crypto_scrypt(
     const uint8_t *passwd,
     size_t passwdlen,
@@ -33,7 +33,7 @@ int calibrate(
     uint32_t *p);
 ]]
 
-local scrypt = ffi_load("scrypt")
+local scrypt = ffi_load("/Users/bungle/Sources/lua-scrypt/scrypt.so")
 
 local s = 32
 local z = 64
@@ -43,6 +43,16 @@ local r = ffi_new("uint32_t[1]", 8)
 local p = ffi_new("uint32_t[1]", 1)
 local b = ffi_new(t, s)
 local h = ffi_new(t, z)
+
+local function random(len)
+    local s = ffi_new(t, len)
+    C.RAND_pseudo_bytes(s, len)
+    if not s then return nil end
+    local b = ffi_new(t, len * 2)
+    C.ngx_hex_dump(b, s, len)
+    return ffi_str(b, len * 2),strong
+end
+
 
 local function crypt(opts)
     local secret,salt,saltsize,keysize = '',nil,8,32
@@ -81,7 +91,7 @@ local function crypt(opts)
             end
         end
     end
-    if not salt then salt = random.bytes(saltsize, 'hex') end
+    if not salt then salt = random(saltsize) end
     if scrypt.crypto_scrypt(
         secret, #secret, salt, #salt, n[0], r[0], p[0], b, s) == 0 then
         C.ngx_hex_dump(h, b, s)
