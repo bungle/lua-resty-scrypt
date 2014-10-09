@@ -124,7 +124,7 @@ local function calibrate(maxmem, maxmemfrac, maxtime)
 end
 
 local function memoryuse(n, r, p)
-    return 128 * r * p + 256 * r + 128 * r * n;
+    return 128 * (r or 8) * (p or 1) + 256 * (r or 8) + 128 * (r or 8) * (n or 32768);
 end
 
 return {
