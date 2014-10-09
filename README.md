@@ -104,6 +104,14 @@ arguments.
 local memoryuse = scrypt.memoryuse(scrypt.calibrate())
 ```
 
+Default parameters for `n`, `r`, and `p` are:
+
+```lua
+n = 32768
+r = 8
+p = 1
+```
+
 ## License
 
 `lua-resty-scrypt` uses two clause BSD license.
