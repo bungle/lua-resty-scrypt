@@ -16,6 +16,6 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["resty.scrypt"]          = "lib/resty/scrypt.lua"
+        ["resty.scrypt"] = "lib/resty/scrypt.lua"
     }
 }
