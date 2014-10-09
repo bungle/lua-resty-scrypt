@@ -18,7 +18,7 @@ local n,r,p  = scrypt.calibrate()               -- returns n,r,p calibration val
 #### string scrypt.crypt(opts)
 
 Uses scrypt algorithm to generate hash from the input. Input parameter `opts` can
-either be `string` (a secret) or a table. If it is a table you may pass in some
+either be `string` (a `secret`) or a table. If it is a table you may pass in some
 configuration parameters as well. Available table options (defaults are as follows):
 
 ```lua
@@ -43,7 +43,7 @@ This function returns string that looks like this:
 n$r$p$salt$hash
 ```
 
-The hash part is `hex dump` of the scrypt generated hash.
+All parts present a `hex dump` of their values.
 
 ##### Example
 
@@ -53,6 +53,19 @@ local h2 = scrypt.crypt{
     secret  = "My Secret",
     keysize = 512 
 }
+```
+
+#### boolean scrypt.check(secret, hash)
+
+With this function you can check if the `secret` really matches with the `hash` that
+was generated with `scrypt.crypt` from the same `secret`. The `hash` contains also the
+configuration parameters like `n`, `r`, `p` and `salt`.
+
+##### Example
+
+```lua
+local b1 = scrypt.check("My Secret", scrypt.crypt "My Secret") -- returns true
+local b2 = scrypt.check("My Secret", scrypt.crypt "No Secret") -- returns false
 ```
 
 ## License
