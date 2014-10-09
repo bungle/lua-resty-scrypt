@@ -1,17 +1,86 @@
-lua-resty-scrypt
-================
+# lua-resty-scrypt
 
 LuaJIT FFI-based scrypt library for OpenResty.
 
-Usage
------
+## Hello World with lua-resty-scrypt
 
 ```lua
 local scrypt = require "resty.scrypt"
-local hash   = scrypt.crypt("My Secret")        -- returns a hash that can be stored in db
+local hash   = scrypt.crypt "My Secret"         -- returns a hash that can be stored in db
 local valid  = scrypt.check("My Secret", hash)  -- valid holds true
 local valid  = scrypt.check("My Guess",  hash)  -- valid holds false
 
 local n,r,p  = scrypt.calibrate()               -- returns n,r,p calibration values
 ```
 
+## Lua API
+
+#### string scrypt.crypt(opts)
+
+Uses scrypt algorithm to generate hash from the input. Input parameter `opts` can
+either be `string` (a secret) or a table. If it is a table you may pass in some
+configuration parameters as well. Available table options (defaults are as follows):
+
+```lua
+local opts = {
+    secret   = "",
+    keysize  = 32,
+    n        = 32768
+    r        = 8,
+    p        = 1,
+    salt     = "random (saltsize) bytes generated with OpenSSL",
+    saltsize = 8
+}
+```
+
+If you pass opts anything other than a table, it will be `tostring`ified and used
+as a `secret`. `keysize` can be between 16 and 512, `saltsize` can be between 8
+and 32.
+
+This function returns string that looks like this:
+
+```lua
+n$r$p$salt$hash
+```
+
+The hash part is `hex dump` of the scrypt generated hash.
+
+##### Example
+
+```lua
+local h1 = scrypt.crypt "My Secret"
+local h2 = scrypt.crypt{
+    secret  = "My Secret",
+    keysize = 512 
+}
+```
+
+## License
+
+`lua-resty-scrypt` uses two clause BSD license.
+
+```
+Copyright (c) 2014, Aapo Talvensaari
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
