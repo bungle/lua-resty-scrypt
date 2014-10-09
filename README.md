@@ -93,6 +93,17 @@ local hash  = scrypt.crypt{
 }
 ```
 
+#### number scrypt.memoryuse(n, r, p)
+
+Counts the memory use of scrypt-algorigth with the provided `n`, `r`, and `p`
+arguments.
+
+##### Example
+
+```lua
+local memoryuse = scrypt.memoryuse(scrypt.calibrate())
+```
+
 ## License
 
 `lua-resty-scrypt` uses two clause BSD license.
