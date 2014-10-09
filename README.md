@@ -97,7 +97,7 @@ local b1 = scrypt.check("My Secret", scrypt.crypt "My Secret") -- returns true
 local b2 = scrypt.check("My Secret", scrypt.crypt "No Secret") -- returns false
 ```
 
-#### n, r, p scrypt.calibrate(maxmem, maxmemfrac, maxtime)
+#### number, number, number scrypt.calibrate(maxmem, maxmemfrac, maxtime)
 
 This function can be used to count `n`, `r`, and `p` configuration values from
 `maxmem`, `maxmemfrac` and `maxtime` parameters. These are the defaults for those:
