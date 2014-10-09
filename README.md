@@ -1,6 +1,6 @@
 # lua-resty-scrypt
 
-LuaJIT FFI-based scrypt library for OpenResty.
+`lua-resty-scrypt` is a scrypt (password) hashing library for OpenResty.
 
 ## Hello World with lua-resty-scrypt
 
@@ -12,6 +12,35 @@ local valid  = scrypt.check("My Guess",  hash)  -- valid holds false
 
 local n,r,p  = scrypt.calibrate()               -- returns n,r,p calibration values
 ```
+
+## Installation
+
+Just place [`scrypt.lua`](https://github.com/bungle/lua-resty-scrypt/blob/master/lib/resty/scrypt.lua) somewhere in your `package.path`, preferably under `resty` directory. If you are using OpenResty, the default location would be `/usr/local/openresty/lualib/resty`.
+
+### Compiling and Installing Scrypt C-library
+
+These are just rudimentary notes. Better installation instructions will follow:
+
+1. First download Scrypt from here: https://github.com/bungle/lua-scrypt
+2. Run `make`
+4. Place `scrypt.so` in Lua's `package.cpath` (or modify `scrypt.lua` and point `ffi_load("scrypt")` with full path to `scrypt.so`, e.g. `local json = ffi_load("/usr/local/lib/lua/5.1/scrypt.so")`).
+
+### Using LuaRocks or MoonRocks
+
+If you are using LuaRocks >= 2.2:
+
+```Shell
+$ luarocks install lua-resty-scrypt
+```
+
+If you are using LuaRocks < 2.2:
+
+```Shell
+$ luarocks install --server=http://rocks.moonscript.org moonrocks
+$ moonrocks install lua-resty-scrypt
+```
+
+MoonRocks repository for `lua-resty-scrypt`  is located here: https://rocks.moonscript.org/modules/bungle/lua-resty-scrypt.
 
 ## Lua API
 
