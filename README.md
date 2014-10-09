@@ -68,6 +68,31 @@ local b1 = scrypt.check("My Secret", scrypt.crypt "My Secret") -- returns true
 local b2 = scrypt.check("My Secret", scrypt.crypt "No Secret") -- returns false
 ```
 
+#### n, r, p scrypt.calibrate(maxmem, maxmemfrac, maxtime)
+
+This function can be used to count `n`, `r`, and `p` configuration values from
+`maxmem`, `maxmemfrac` and `maxtime` parameters. These are the defaults for those:
+
+```lua
+maxmem     = 1048576
+maxmemfrac = 0.5
+maxtime    = 0.2
+```
+
+The results may change depending on your computer's processing power.
+
+##### Example
+
+```lua
+local n,r,p = scrypt.calibrate()
+local hash  = scrypt.crypt{
+    secret  = "My Secret",
+    n = n,
+    r = r,
+    p = p
+}
+```
+
 ## License
 
 `lua-resty-scrypt` uses two clause BSD license.
