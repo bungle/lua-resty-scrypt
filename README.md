@@ -54,7 +54,7 @@ configuration parameters as well. Available table options (defaults are as follo
 local opts = {
     secret   = "",
     keysize  = 32,
-    n        = 32768
+    n        = 32768,
     r        = 8,
     p        = 1,
     salt     = "random (saltsize) bytes generated with OpenSSL",
