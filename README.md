@@ -23,7 +23,7 @@ These are just rudimentary notes. Better installation instructions will follow:
 
 1. First download Scrypt from here: https://github.com/bungle/lua-scrypt
 2. Run `make`
-4. Place `scrypt.so|scrypt.dylib|scrypt.dll` somewhere in the default search path for dynamic libraries of your operating system (or modify `scrypt.lua` and point `ffi_load("scrypt")` with full path to `scrypt.so|scrypt.dylib|scrypt.dll`, e.g. `local json = ffi_load("/usr/local/lib/lua/5.1/scrypt.so")`).
+4. Place `scrypt.so|scrypt.dylib|scrypt.dll` somewhere in the default search path for dynamic libraries of your operating system (or modify `scrypt.lua` and point `ffi_load("scrypt")` with full path to `scrypt.so|scrypt.dylib|scrypt.dll`, e.g. `local scrypt = ffi_load("/usr/local/lib/lua/5.1/scrypt.so")`).
 
 ### Using LuaRocks or MoonRocks
 
