@@ -23,7 +23,7 @@ These are just rudimentary notes. Better installation instructions will follow:
 
 1. First download Scrypt from here: https://github.com/bungle/lua-scrypt
 2. Run `make`
-4. Place `scrypt.so` in Lua's `package.cpath` (or modify `scrypt.lua` and point `ffi_load("scrypt")` with full path to `scrypt.so`, e.g. `local json = ffi_load("/usr/local/lib/lua/5.1/scrypt.so")`).
+4. Place `scrypt.so|scrypt.dylib|scrypt.dll` somewhere in the default search path for dynamic libraries of your operating system (or modify `scrypt.lua` and point `ffi_load("scrypt")` with full path to `scrypt.so|scrypt.dylib|scrypt.dll`, e.g. `local scrypt = ffi_load("/usr/local/lib/lua/5.1/scrypt.so")`).
 
 ### Using LuaRocks or MoonRocks
 
@@ -54,7 +54,7 @@ configuration parameters as well. Available table options (defaults are as follo
 local opts = {
     secret   = "",
     keysize  = 32,
-    n        = 32768
+    n        = 32768,
     r        = 8,
     p        = 1,
     salt     = "random (saltsize) bytes generated with OpenSSL",
@@ -97,7 +97,7 @@ local b1 = scrypt.check("My Secret", scrypt.crypt "My Secret") -- returns true
 local b2 = scrypt.check("My Secret", scrypt.crypt "No Secret") -- returns false
 ```
 
-#### n, r, p scrypt.calibrate(maxmem, maxmemfrac, maxtime)
+#### number, number, number scrypt.calibrate(maxmem, maxmemfrac, maxtime)
 
 This function can be used to count `n`, `r`, and `p` configuration values from
 `maxmem`, `maxmemfrac` and `maxtime` parameters. These are the defaults for those:
