@@ -13,7 +13,7 @@ local str_format = string.format
 ffi_cdef[[
 typedef unsigned char u_char;
 u_char * ngx_hex_dump(u_char *dst, const u_char *src, size_t len);
-int RAND_pseudo_bytes(u_char *buf, int num);
+int RAND_bytes(u_char *buf, int num);
 int crypto_scrypt(
     const uint8_t *passwd,
     size_t passwdlen,
@@ -33,7 +33,7 @@ int calibrate(
     uint32_t *p);
 ]]
 
-local scrypt = ffi_load("scrypt")
+local scrypt = ffi_load "scrypt"
 
 local s = 32
 local z = 64
@@ -46,7 +46,7 @@ local h = ffi_new(t, z)
 
 local function random(len)
     local s = ffi_new(t, len)
-    C.RAND_pseudo_bytes(s, len)
+    C.RAND_bytes(s, len)
     if not s then return nil end
     local b = ffi_new(t, len * 2)
     C.ngx_hex_dump(b, s, len)
@@ -54,7 +54,7 @@ local function random(len)
 end
 
 local function crypt(opts)
-    local secret,salt,saltsize,keysize = '',nil,8,32
+    local secret, salt, saltsize, keysize = '', nil, 8, 32
     if type(opts) ~= "table" then
         secret = tostring(opts)
     else
@@ -69,13 +69,13 @@ local function crypt(opts)
             end
         end
         if type(opts.n) == "number" then
-            if (n[0] ~= opts.n) then n[0] = opts.n end
+            if n[0] ~= opts.n then n[0] = opts.n end
         end
         if type(opts.r) == "number" then
-            if (r[0] ~= opts.r) then r[0] = opts.r end
+            if r[0] ~= opts.r then r[0] = opts.r end
         end
         if type(opts.p) == "number" then
-            if (p[0] ~= opts.p) then p[0] = opts.p end
+            if p[0] ~= opts.p then p[0] = opts.p end
         end
         if type(opts.salt) == "string" then
             salt = opts.salt
