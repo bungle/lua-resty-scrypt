@@ -37,7 +37,7 @@ local scrypt = ffi_load "scrypt"
 
 local s = 32
 local z = 64
-local t = ffi_typeof("uint8_t[?]")
+local t = ffi_typeof "uint8_t[?]"
 local n = ffi_new("uint64_t[1]", 32768)
 local r = ffi_new("uint32_t[1]", 8)
 local p = ffi_new("uint32_t[1]", 1)
