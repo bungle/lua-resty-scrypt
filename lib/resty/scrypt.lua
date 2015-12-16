@@ -50,7 +50,7 @@ local function random(len)
     if not s then return nil end
     local b = ffi_new(t, len * 2)
     C.ngx_hex_dump(b, s, len)
-    return ffi_str(b, len * 2),strong
+    return ffi_str(b, len * 2)
 end
 
 local function crypt(opts)
