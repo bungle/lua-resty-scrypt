@@ -4,16 +4,16 @@ local ffi_new    = ffi.new
 local ffi_str    = ffi.string
 local ffi_load   = ffi.load
 local ffi_typeof = ffi.typeof
-local C          = ffi.C
 local type       = type
 local tonumber   = tonumber
 local tostring   = tostring
-local str_format = string.format
-
+local format     = string.format
+local function unavailable() return nil end
+local ok, rnd = pcall(require, "resty.random")
+local bytes = ok and rnd.bytes or unavailable
+local ok, str = pcall(require, "resty.string")
+local tohex = ok and str.to_hex or unavailable
 ffi_cdef[[
-typedef unsigned char u_char;
-u_char * ngx_hex_dump(u_char *dst, const u_char *src, size_t len);
-int RAND_bytes(u_char *buf, int num);
 int crypto_scrypt(
     const uint8_t *passwd,
     size_t passwdlen,
@@ -32,27 +32,17 @@ int calibrate(
     uint32_t *r,
     uint32_t *p);
 ]]
-
 local scrypt = ffi_load "scrypt"
-
 local s = 32
-local z = 64
 local t = ffi_typeof "uint8_t[?]"
 local n = ffi_new("uint64_t[1]", 32768)
 local r = ffi_new("uint32_t[1]", 8)
 local p = ffi_new("uint32_t[1]", 1)
 local b = ffi_new(t, s)
-local h = ffi_new(t, z)
-
 local function random(len)
-    local s = ffi_new(t, len)
-    C.RAND_bytes(s, len)
-    if not s then return nil end
-    local b = ffi_new(t, len * 2)
-    C.ngx_hex_dump(b, s, len)
-    return ffi_str(b, len * 2)
+    local b = bytes(len, true) or bytes(len)
+    return b and tohex(b) or nil
 end
-
 local function crypt(opts)
     local secret, salt, saltsize, keysize = '', nil, 8, 32
     if type(opts) ~= "table" then
@@ -64,8 +54,8 @@ local function crypt(opts)
             elseif opts.keysize > 512 then keysize = 512
             else                           keysize = opts.keysize end
             if keysize ~= s then
-                s,z = keysize, keysize * 2
-                b,h = ffi_new(t, s), ffi_new(t, z)
+                s = keysize
+                b = ffi_new(t, s)
             end
         end
         if type(opts.n) == "number" then
@@ -90,17 +80,17 @@ local function crypt(opts)
             end
         end
     end
-    if not salt then salt = random(saltsize) end
-    if scrypt.crypto_scrypt(
-        secret, #secret, salt, #salt, n[0], r[0], p[0], b, s) == 0 then
-        C.ngx_hex_dump(h, b, s)
-        return str_format("%02x$%02x$%02x$%s$%s", tonumber(n[0]), r[0], p[0],
-            salt, ffi_str(h, z))
-    else
-        return false
+    if not salt then
+        salt = random(saltsize)
+        if not salt then
+            return nil, "Unable to generate random salt"
+        end
     end
+    if scrypt.crypto_scrypt(secret, #secret, salt, #salt, n[0], r[0], p[0], b, s) == 0 then
+        return format("%02x$%02x$%02x$%s$%s", tonumber(n[0]), r[0], p[0], salt, tohex(ffi_str(b, s)))
+    end
+    return nil, "Unable to call scrypt"
 end
-
 local function check(secret, hash)
     local opts = {}
     local n, r, p, salt = hash:match(("([^$]*)$"):rep(5))
@@ -111,7 +101,6 @@ local function check(secret, hash)
     opts.p = tonumber(p, 16)
     return crypt(opts) == hash
 end
-
 local function calibrate(maxmem, maxmemfrac, maxtime)
     if type(maxmem)     ~= "number" then maxmem = 1048576 end
     if type(maxmemfrac) ~= "number" then maxmemfrac = 0.5 end
@@ -119,14 +108,12 @@ local function calibrate(maxmem, maxmemfrac, maxtime)
     if (scrypt.calibrate(maxmem, maxmemfrac, maxtime, n, r, p) == 0) then
         return tonumber(n[0]), r[0], p[0]
     else
-        return false
+        return nil, "Unable to call scrypt calibrate"
     end
 end
-
 local function memoryuse(n, r, p)
     return 128 * (r or 8) * (p or 1) + 256 * (r or 8) + 128 * (r or 8) * (n or 32768);
 end
-
 return {
     crypt     = crypt,
     check     = check,
