@@ -32,7 +32,43 @@ int calibrate(
     uint32_t *r,
     uint32_t *p);
 ]]
-local scrypt = ffi_load "scrypt"
+
+-- stolen from https://github.com/orinc/lua-resty-ssl/blob/master/lib/resty/ssl.lua
+local function load_shared_lib(so_name)
+    local string_gmatch = string.gmatch
+    local string_match = string.match
+    local io_open = io.open
+    local io_close = io.close
+    local new_tab = require "table.new"
+
+    local cpath = package.cpath
+    local tried_paths = new_tab(32, 0)
+    local i = 1
+
+    for k, _ in string_gmatch(cpath, "[^;]+") do
+        local fpath = string_match(k, "(.*/)")
+        fpath = fpath .. so_name
+
+        local f = io_open(fpath)
+        if f ~= nil then
+            io_close(f)
+            ngx.log(ngx.DEBUG, 'using: ', fpath)
+            return ffi.load(fpath)
+        end
+        tried_paths[i] = fpath
+        i = i + 1
+    end
+
+    return nil, tried_paths
+end
+
+local scrypt, paths = load_shared_lib('scrypt.so')
+if not scrypt then
+    ngx.log(ngx.CRIT, 'could not find scrypt.so after looking through: ',
+            table.concat(paths, '\n'))
+    error('could not load LMDB shared library')
+end
+
 local s = 32
 local t = ffi_typeof "uint8_t[?]"
 local n = ffi_new("uint64_t[1]", 32768)
